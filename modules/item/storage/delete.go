@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"GoTodo/common"
 	"GoTodo/modules/item/model"
 	"context"
 )
@@ -13,8 +14,8 @@ func (s *sqlStore) DeleteItem(ctx context.Context, cond map[string]interface{}) 
 		Updates(map[string]interface{}{
 			"status": deletedStatus,
 		}).Error; err != nil {
-		return err
+		return common.ErrDB(err)
 	}
-	
+
 	return nil
 }

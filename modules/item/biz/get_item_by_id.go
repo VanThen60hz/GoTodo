@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"GoTodo/common"
 	"GoTodo/modules/item/model"
 	"context"
 )
@@ -21,7 +22,8 @@ func (biz *getItemBiz) GetItemById(ctx context.Context, id int) (*model.TodoItem
 	data, err := biz.store.GetItem(ctx, map[string]interface{}{"id": id})
 
 	if err != nil {
-		return nil, err
+
+		return nil, common.ErrCannotGetEntity(model.EntityName, err)
 	}
 
 	return data, nil

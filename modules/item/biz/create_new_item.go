@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"GoTodo/common"
 	"GoTodo/modules/item/model"
 	"context"
 )
@@ -21,5 +22,10 @@ func (biz *createItemBiz) CreateNewItem(ctx context.Context, data *model.TodoIte
 	if err := data.Validate(); err != nil {
 		return err
 	}
-	return biz.store.CreateItem(ctx, data)
+
+	if err := biz.store.CreateItem(ctx, data); err != nil {
+		return common.ErrCannotCreateEntity(model.EntityName, err)
+	}
+
+	return nil
 }

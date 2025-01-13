@@ -1,7 +1,9 @@
 package main
 
 import (
+	"GoTodo/middleware"
 	ginitem "GoTodo/modules/item/transport/gin"
+	"GoTodo/modules/upload"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
@@ -28,9 +30,14 @@ func main() {
 
 	gin.ForceConsoleColor()
 	r := gin.Default()
+	r.Use(middleware.Recover())
+
+	r.Static("/static", "./static")
 
 	v1 := r.Group("/v1")
 	{
+		v1.PUT("/upload", upload.Upload(db))
+
 		items := v1.Group("/items")
 		{
 			items.POST("", ginitem.CreateItem(db))
