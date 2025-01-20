@@ -2,11 +2,14 @@ package main
 
 import (
 	"GoTodo/component"
+	"GoTodo/component/tokenprovider/jwt"
 	"GoTodo/component/uploadprovider"
 	"GoTodo/middleware"
 	"GoTodo/modules/item/model"
 	ginitem "GoTodo/modules/item/transport/gin"
 	"GoTodo/modules/upload/uploadtransport/ginupload"
+	"GoTodo/modules/user/storage"
+	ginuser "GoTodo/modules/user/transport/gin"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
@@ -18,6 +21,7 @@ import (
 
 func main() {
 	dsn := os.Getenv("DB_CONN")
+	systemSecret := os.Getenv("SECRET")
 	if dsn == "" {
 		log.Fatalln("DB_CONN is not set")
 	}
@@ -46,13 +50,17 @@ func main() {
 		log.Fatalf("Failed to migrate DB: %v\n", err)
 	}
 
-	if err := runService(db, s3Provider); err != nil {
+	if err := runService(db, s3Provider, systemSecret); err != nil {
 		log.Fatalf("Service stopped: %v\n", err)
 	}
 }
 
-func runService(db *gorm.DB, upProvider uploadprovider.UploadProvider) error {
+func runService(db *gorm.DB, upProvider uploadprovider.UploadProvider, systemSecret string) error {
 	appCtx := component.NewAppContext(db, upProvider)
+
+	authStore := storage.NewSqlStore(db)
+	tokenProvider := jwt.NewTokenJWTProvider("jwt", systemSecret)
+	middlewareAuth := middleware.RequiredAuth(authStore, tokenProvider)
 
 	gin.ForceConsoleColor()
 	r := gin.Default()
@@ -65,7 +73,14 @@ func runService(db *gorm.DB, upProvider uploadprovider.UploadProvider) error {
 	{
 		v1.PUT("/upload", ginupload.Upload(appCtx))
 
-		items := v1.Group("/items")
+		users := v1.Group("/auth")
+		{
+			users.POST("/register", ginuser.Register(appCtx.GetMainDBConnection()))
+			users.POST("/login", ginuser.Login(appCtx.GetMainDBConnection(), tokenProvider))
+			users.GET("/me", middlewareAuth, ginuser.Profile())
+		}
+
+		items := v1.Group("/items", middlewareAuth)
 		{
 			items.POST("", ginitem.CreateItem(appCtx.GetMainDBConnection()))
 			items.GET("", ginitem.ListItem(appCtx.GetMainDBConnection()))
