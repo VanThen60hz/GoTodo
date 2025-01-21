@@ -29,6 +29,10 @@ func (s *sqlStore) ListItem(
 		return nil, common.ErrDB(err)
 	}
 
+	for i := range moreKeys {
+		db = db.Preload(moreKeys[i])
+	}
+
 	if err := db.Select("*").Order("id desc").
 		Offset((paging.Page - 1) * paging.Limit).
 		Limit(paging.Limit).

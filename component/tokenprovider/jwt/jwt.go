@@ -4,7 +4,7 @@ import (
 	"GoTodo/common"
 	"GoTodo/component/tokenprovider"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 	"time"
 )
 
@@ -19,7 +19,7 @@ func NewTokenJWTProvider(prefix string, secret string) *jwtProvider {
 
 type myClaims struct {
 	Payload common.TokenPayload `json:"payload"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 type token struct {
@@ -44,10 +44,10 @@ func (j *jwtProvider) Generate(data tokenprovider.TokenPayload, expiry int) (tok
 			UId:   data.UserId(),
 			URole: data.Role(),
 		},
-		jwt.StandardClaims{
-			ExpiresAt: now.Local().Add(time.Second * time.Duration(expiry)).Unix(),
-			IssuedAt:  now.Local().Unix(),
-			Id:        fmt.Sprintf("%d", now.UnixNano()),
+		jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(now.Add(time.Second * time.Duration(expiry))),
+			IssuedAt:  jwt.NewNumericDate(now),
+			ID:        fmt.Sprintf("%d", now.UnixNano()),
 		},
 	})
 

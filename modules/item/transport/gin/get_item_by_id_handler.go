@@ -27,6 +27,8 @@ func GetItem(db *gorm.DB) func(*gin.Context) {
 			panic(err)
 		}
 
+		data.Mask()
+
 		c.JSON(http.StatusOK, common.SimpleSuccessResponse(data))
 	}
 }

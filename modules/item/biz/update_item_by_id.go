@@ -33,7 +33,8 @@ func (biz *updateItemBiz) UpdateItemById(ctx context.Context, id int, dataUpdate
 	}
 
 	isOwner := biz.requester.GetUserId() == data.UserId
-	if !isOwner || common.IsAdmin(biz.requester) {
+
+	if !isOwner && !common.IsAdmin(biz.requester) {
 		return common.ErrNoPermission(errors.New("you don't have permission to update this item"))
 	}
 

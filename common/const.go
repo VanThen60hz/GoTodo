@@ -2,6 +2,13 @@ package common
 
 import "log"
 
+type DbType int
+
+const (
+	DbTypeItem DbType = 1
+	DbTypeUser DbType = 2
+)
+
 const (
 	CurrentUser = "current_user"
 )

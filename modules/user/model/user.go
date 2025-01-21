@@ -66,7 +66,7 @@ type User struct {
 	FirstName string   `json:"first_name" gorm:"column:first_name;"`
 	Phone     string   `json:"phone" gorm:"column:phone;"`
 	Role      UserRole `json:"role" gorm:"column:role;"`
-	Status    int      `json:"status" gorm:"column:status;"`
+	Status    int      `json:"status" gorm:"column:status;default:1;"`
 }
 
 func (u *User) GetUserId() int {

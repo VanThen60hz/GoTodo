@@ -73,11 +73,11 @@ func runService(db *gorm.DB, upProvider uploadprovider.UploadProvider, systemSec
 	{
 		v1.PUT("/upload", ginupload.Upload(appCtx))
 
-		users := v1.Group("/auth")
+		auth := v1.Group("/auth")
 		{
-			users.POST("/register", ginuser.Register(appCtx.GetMainDBConnection()))
-			users.POST("/login", ginuser.Login(appCtx.GetMainDBConnection(), tokenProvider))
-			users.GET("/me", middlewareAuth, ginuser.Profile())
+			auth.POST("/register", ginuser.Register(appCtx.GetMainDBConnection()))
+			auth.POST("/login", ginuser.Login(appCtx.GetMainDBConnection(), tokenProvider))
+			auth.GET("/me", middlewareAuth, ginuser.Profile())
 		}
 
 		items := v1.Group("/items", middlewareAuth)
