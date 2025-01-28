@@ -2,6 +2,10 @@ package common
 
 import "log"
 
+const (
+	PluginDBMain = "mysql"
+)
+
 type DbType int
 
 const (
