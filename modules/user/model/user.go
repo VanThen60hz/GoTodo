@@ -93,6 +93,7 @@ type UserCreate struct {
 	FirstName       string `json:"first_name" gorm:"column:first_name;"`
 	Role            string `json:"-" gorm:"column:role;"`
 	Salt            string `json:"-" gorm:"column:salt;"`
+	Status          int    `json:"status" gorm:"column:status;default:1;"`
 }
 
 func (UserCreate) TableName() string {

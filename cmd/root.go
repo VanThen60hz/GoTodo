@@ -3,13 +3,14 @@ package cmd
 import (
 	"GoTodo/common"
 	"GoTodo/component"
-	"GoTodo/component/tokenprovider/jwt"
 	"GoTodo/component/uploadprovider"
 	"GoTodo/middleware"
 	ginitem "GoTodo/modules/item/transport/gin"
 	"GoTodo/modules/upload/uploadtransport/ginupload"
 	userstorage "GoTodo/modules/user/storage"
 	ginuser "GoTodo/modules/user/transport/gin"
+	"GoTodo/plugin/simple"
+	"GoTodo/plugin/tokenprovider/jwt"
 	"fmt"
 	goservice "github.com/200Lab-Education/go-sdk"
 	"github.com/200Lab-Education/go-sdk/plugin/storage/sdkgorm"
@@ -26,6 +27,8 @@ func newService() goservice.Service {
 		goservice.WithName("GoTodo"),
 		goservice.WithVersion("1.0.0"),
 		goservice.WithInitRunnable(sdkgorm.NewGormDB("main", common.PluginDBMain)),
+		goservice.WithInitRunnable(jwtplugin.NewJWTPlugin("jwt")),
+		goservice.WithInitRunnable(simple.NewSimplePlugin("simple")),
 	)
 
 	return service
@@ -35,8 +38,6 @@ var rootCmd = &cobra.Command{
 	Use:   "app.exe",
 	Short: "Start GoTodo service",
 	Run: func(cmd *cobra.Command, args []string) {
-
-		systemSecret := os.Getenv("SECRET")
 
 		service := newService()
 
@@ -49,7 +50,19 @@ var rootCmd = &cobra.Command{
 		service.HTTPServer().AddHandler(func(engine *gin.Engine) {
 			engine.Use(middleware.Recover())
 
+			//service.MustGet("simple").(interface {
+			//	GetValue() string
+			//}).GetValue()
+
+			// Example for simple plugin
+			type CanGetValue interface {
+				GetValue() string
+			}
+			log.Println(service.MustGet("simple").(CanGetValue).GetValue())
+			//
+
 			db := service.MustGet(common.PluginDBMain).(*gorm.DB)
+			jwtPlugin := service.MustGet("jwt").(*jwtplugin.JWTPlugin)
 
 			var upProvider uploadprovider.UploadProvider
 			s3BucketName := os.Getenv("S3BucketName")
@@ -66,8 +79,7 @@ var rootCmd = &cobra.Command{
 			appCtx := component.NewAppContext(db, upProvider)
 
 			authStore := userstorage.NewSqlStore(db)
-			tokenProvider := jwt.NewTokenJWTProvider("jwt", systemSecret)
-			middlewareAuth := middleware.RequiredAuth(authStore, tokenProvider)
+			middlewareAuth := middleware.RequiredAuth(authStore, jwtPlugin)
 
 			v1 := engine.Group("/v1")
 			{
@@ -76,7 +88,7 @@ var rootCmd = &cobra.Command{
 				auth := v1.Group("/auth")
 				{
 					auth.POST("/register", ginuser.Register(appCtx.GetMainDBConnection()))
-					auth.POST("/login", ginuser.Login(appCtx.GetMainDBConnection(), tokenProvider))
+					auth.POST("/login", ginuser.Login(appCtx.GetMainDBConnection(), jwtPlugin))
 					auth.GET("/me", middlewareAuth, ginuser.Profile())
 				}
 
@@ -112,4 +124,5 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
 }

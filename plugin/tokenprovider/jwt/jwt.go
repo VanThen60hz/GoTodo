@@ -1,20 +1,56 @@
-package jwt
+package jwtplugin
 
 import (
 	"GoTodo/common"
-	"GoTodo/component/tokenprovider"
+	"GoTodo/plugin/tokenprovider"
+	"flag"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"time"
 )
 
-type jwtProvider struct {
-	prefix string
+type JWTPlugin struct {
+	name   string
 	secret string
 }
 
-func NewTokenJWTProvider(prefix string, secret string) *jwtProvider {
-	return &jwtProvider{prefix: prefix, secret: secret}
+func NewJWTPlugin(name string) *JWTPlugin {
+	return &JWTPlugin{name: name}
+}
+
+func (j *JWTPlugin) GetPrefix() string {
+	return j.name
+}
+
+func (j *JWTPlugin) Get() interface{} {
+	return j
+}
+
+func (j *JWTPlugin) Name() string {
+	return j.name
+}
+
+func (j *JWTPlugin) InitFlags() {
+	flag.StringVar(&j.secret, "jwt-secret", "default_secret", "JWT Secret Key")
+}
+
+func (j *JWTPlugin) Configure() error {
+	if j.secret == "default_secret" {
+		return fmt.Errorf("JWT secret key is not configured")
+	}
+	return nil
+}
+
+func (j *JWTPlugin) Run() error {
+	return nil
+}
+
+func (j *JWTPlugin) Stop() <-chan bool {
+	c := make(chan bool)
+	go func() {
+		c <- true
+	}()
+	return c
 }
 
 type myClaims struct {
@@ -32,13 +68,12 @@ func (t *token) GetToken() string {
 	return t.Token
 }
 
-func (j *jwtProvider) SecretKey() string {
+func (j *JWTPlugin) SecretKey() string {
 	return j.secret
 }
 
-func (j *jwtProvider) Generate(data tokenprovider.TokenPayload, expiry int) (tokenprovider.Token, error) {
+func (j *JWTPlugin) Generate(data tokenprovider.TokenPayload, expiry int) (tokenprovider.Token, error) {
 	now := time.Now()
-
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, myClaims{
 		common.TokenPayload{
 			UId:   data.UserId(),
@@ -63,17 +98,12 @@ func (j *jwtProvider) Generate(data tokenprovider.TokenPayload, expiry int) (tok
 	}, nil
 }
 
-func (j *jwtProvider) Validate(myToken string) (tokenprovider.TokenPayload, error) {
+func (j *JWTPlugin) Validate(myToken string) (tokenprovider.TokenPayload, error) {
 	res, err := jwt.ParseWithClaims(myToken, &myClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(j.secret), nil
 	})
 
-	if err != nil {
-		return nil, tokenprovider.ErrInvalidToken
-	}
-
-	// validate the token
-	if !res.Valid {
+	if err != nil || !res.Valid {
 		return nil, tokenprovider.ErrInvalidToken
 	}
 
@@ -82,6 +112,5 @@ func (j *jwtProvider) Validate(myToken string) (tokenprovider.TokenPayload, erro
 		return nil, tokenprovider.ErrInvalidToken
 	}
 
-	// return the token
 	return claims.Payload, nil
 }

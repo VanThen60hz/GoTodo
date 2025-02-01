@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"GoTodo/common"
-	"GoTodo/component/tokenprovider"
 	"GoTodo/modules/user/model"
+	"GoTodo/plugin/tokenprovider"
 	"context"
 	"errors"
 	"fmt"

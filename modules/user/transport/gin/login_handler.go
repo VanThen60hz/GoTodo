@@ -2,10 +2,10 @@ package ginuser
 
 import (
 	"GoTodo/common"
-	"GoTodo/component/tokenprovider"
 	"GoTodo/modules/user/biz"
 	"GoTodo/modules/user/model"
 	"GoTodo/modules/user/storage"
+	"GoTodo/plugin/tokenprovider"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"net/http"
