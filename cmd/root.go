@@ -9,6 +9,7 @@ import (
 	"GoTodo/modules/upload/uploadtransport/ginupload"
 	userstorage "GoTodo/modules/user/storage"
 	ginuser "GoTodo/modules/user/transport/gin"
+	ginuserlikeitem "GoTodo/modules/userlikeitem/transport/gin"
 	"GoTodo/plugin/simple"
 	"GoTodo/plugin/tokenprovider/jwt"
 	"fmt"
@@ -87,18 +88,22 @@ var rootCmd = &cobra.Command{
 
 				auth := v1.Group("/auth")
 				{
-					auth.POST("/register", ginuser.Register(appCtx.GetMainDBConnection()))
-					auth.POST("/login", ginuser.Login(appCtx.GetMainDBConnection(), jwtPlugin))
+					auth.POST("/register", ginuser.Register(service))
+					auth.POST("/login", ginuser.Login(service, jwtPlugin))
 					auth.GET("/me", middlewareAuth, ginuser.Profile())
 				}
 
 				items := v1.Group("/items", middlewareAuth)
 				{
-					items.POST("", ginitem.CreateItem(appCtx.GetMainDBConnection()))
-					items.GET("", ginitem.ListItem(appCtx.GetMainDBConnection()))
-					items.GET("/:id", ginitem.GetItem(appCtx.GetMainDBConnection()))
-					items.PATCH("/:id", ginitem.UpdateItem(appCtx.GetMainDBConnection()))
-					items.DELETE("/:id", ginitem.DeleteItem(appCtx.GetMainDBConnection()))
+					items.POST("", ginitem.CreateItem(service))
+					items.GET("", ginitem.ListItem(service))
+					items.GET("/:id", ginitem.GetItem(service))
+					items.PATCH("/:id", ginitem.UpdateItem(service))
+					items.DELETE("/:id", ginitem.DeleteItem(service))
+
+					items.GET("/:id/liked-users", ginuserlikeitem.ListUserLiked(service))
+					items.POST("/:id/like", ginuserlikeitem.LikeItem(service))
+					items.DELETE("/:id/unlike", ginuserlikeitem.UnLikeItem(service))
 				}
 			}
 

@@ -5,12 +5,13 @@ import (
 	"GoTodo/modules/item/biz"
 	"GoTodo/modules/item/model"
 	"GoTodo/modules/item/storage"
+	goservice "github.com/200Lab-Education/go-sdk"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"net/http"
 )
 
-func ListItem(db *gorm.DB) func(*gin.Context) {
+func ListItem(serviceCtx goservice.ServiceContext) func(*gin.Context) {
 	return func(c *gin.Context) {
 		var queryString struct {
 			common.Paging
@@ -24,6 +25,8 @@ func ListItem(db *gorm.DB) func(*gin.Context) {
 		queryString.Paging.Process()
 
 		requester := c.MustGet(common.CurrentUser).(common.Requester)
+
+		db := serviceCtx.MustGet(common.PluginDBMain).(*gorm.DB)
 
 		store := storage.NewSqlStore(db)
 		business := biz.NewListItemBiz(store, requester)

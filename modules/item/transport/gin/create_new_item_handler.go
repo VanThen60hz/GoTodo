@@ -5,12 +5,13 @@ import (
 	"GoTodo/modules/item/biz"
 	"GoTodo/modules/item/model"
 	"GoTodo/modules/item/storage"
+	goservice "github.com/200Lab-Education/go-sdk"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"net/http"
 )
 
-func CreateItem(db *gorm.DB) func(*gin.Context) {
+func CreateItem(serviceCtx goservice.ServiceContext) func(*gin.Context) {
 	return func(c *gin.Context) {
 		var itemData model.TodoItemCreation
 
@@ -24,6 +25,8 @@ func CreateItem(db *gorm.DB) func(*gin.Context) {
 
 		requester := c.MustGet(common.CurrentUser).(common.Requester)
 		itemData.UserId = requester.GetUserId()
+
+		db := serviceCtx.MustGet(common.PluginDBMain).(*gorm.DB)
 
 		store := storage.NewSqlStore(db)
 		business := biz.NewCreateItemBiz(store)

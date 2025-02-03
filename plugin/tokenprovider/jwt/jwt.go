@@ -35,9 +35,9 @@ func (j *JWTPlugin) InitFlags() {
 }
 
 func (j *JWTPlugin) Configure() error {
-	if j.secret == "default_secret" {
-		return fmt.Errorf("JWT secret key is not configured")
-	}
+	//if j.secret == "default_secret" {
+	//	return fmt.Errorf("JWT secret key is not configured")
+	//}
 	return nil
 }
 

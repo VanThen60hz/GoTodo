@@ -6,12 +6,13 @@ import (
 	"GoTodo/modules/user/model"
 	"GoTodo/modules/user/storage"
 	"GoTodo/plugin/tokenprovider"
+	goservice "github.com/200Lab-Education/go-sdk"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"net/http"
 )
 
-func Login(db *gorm.DB, tokenprovider tokenprovider.Provider) gin.HandlerFunc {
+func Login(serviceCtx goservice.ServiceContext, tokenprovider tokenprovider.Provider) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var loginUserData model.UserLogin
 
@@ -19,6 +20,7 @@ func Login(db *gorm.DB, tokenprovider tokenprovider.Provider) gin.HandlerFunc {
 			panic(common.ErrInvalidRequest(err))
 		}
 
+		db := serviceCtx.MustGet(common.PluginDBMain).(*gorm.DB)
 		store := storage.NewSqlStore(db)
 		md5 := common.NewMd5Hash()
 
