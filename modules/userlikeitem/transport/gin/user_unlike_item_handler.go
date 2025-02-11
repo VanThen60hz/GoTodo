@@ -2,6 +2,7 @@ package ginuserlikeitem
 
 import (
 	"GoTodo/common"
+	itemStorage "GoTodo/modules/item/storage"
 	"GoTodo/modules/userlikeitem/biz"
 	"GoTodo/modules/userlikeitem/storage"
 	"fmt"
@@ -22,7 +23,8 @@ func UnLikeItem(serviceCtx goservice.ServiceContext) gin.HandlerFunc {
 		db := serviceCtx.MustGet(common.PluginDBMain).(*gorm.DB)
 
 		store := storage.NewSQLStore(db)
-		business := biz.NewUserUnLikeItemBiz(store)
+		itemStore := itemStorage.NewSqlStore(db)
+		business := biz.NewUserUnLikeItemBiz(store, itemStore)
 
 		fmt.Println("requester.GetUserId(): ", requester.GetUserId(), "int(id.GetLocalID()): ", int(id.GetLocalID()))
 

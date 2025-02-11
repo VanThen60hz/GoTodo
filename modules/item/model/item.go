@@ -39,6 +39,7 @@ type TodoItem struct {
 	Description string             `json:"description" gorm:"column:description;"`
 	Status      Status             `json:"status" gorm:"column:status;"`
 	Image       *common.Image      `json:"image" gorm:"column:image;"`
+	LikedCount  int                `json:"liked_count" gorm:"-"`
 	Owner       *common.SimpleUser `json:"user" gorm:"foreignKey:UserId;references:Id;"`
 }
 

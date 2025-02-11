@@ -4,7 +4,9 @@ import (
 	"GoTodo/common"
 	"GoTodo/modules/item/biz"
 	"GoTodo/modules/item/model"
+	"GoTodo/modules/item/repository"
 	"GoTodo/modules/item/storage"
+	usrLikeStore "GoTodo/modules/userlikeitem/storage"
 	goservice "github.com/200Lab-Education/go-sdk"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -29,7 +31,9 @@ func ListItem(serviceCtx goservice.ServiceContext) func(*gin.Context) {
 		db := serviceCtx.MustGet(common.PluginDBMain).(*gorm.DB)
 
 		store := storage.NewSqlStore(db)
-		business := biz.NewListItemBiz(store, requester)
+		likeStore := usrLikeStore.NewSQLStore(db)
+		repo := repository.NewListItemRepo(store, likeStore, requester)
+		business := biz.NewListItemBiz(repo, requester)
 
 		result, err := business.ListItem(c.Request.Context(), &queryString.Filter, &queryString.Paging)
 

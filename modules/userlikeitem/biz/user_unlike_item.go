@@ -4,6 +4,7 @@ import (
 	"GoTodo/common"
 	"GoTodo/modules/userlikeitem/model"
 	"context"
+	"log"
 )
 
 type UserUnLikeItemStore interface {
@@ -11,12 +12,17 @@ type UserUnLikeItemStore interface {
 	Delete(ctx context.Context, userId, itemId int) error
 }
 
-type userUnLikeItemBiz struct {
-	store UserUnLikeItemStore
+type DecrementLikeCountStore interface {
+	DecreaseLikeCount(ctx context.Context, id int) error
 }
 
-func NewUserUnLikeItemBiz(store UserUnLikeItemStore) *userUnLikeItemBiz {
-	return &userUnLikeItemBiz{store: store}
+type userUnLikeItemBiz struct {
+	store     UserUnLikeItemStore
+	itemStore DecrementLikeCountStore
+}
+
+func NewUserUnLikeItemBiz(store UserUnLikeItemStore, itemStore DecrementLikeCountStore) *userUnLikeItemBiz {
+	return &userUnLikeItemBiz{store: store, itemStore: itemStore}
 }
 
 func (biz *userUnLikeItemBiz) UnLikeItem(ctx context.Context, userId, itemId int) error {
@@ -33,6 +39,14 @@ func (biz *userUnLikeItemBiz) UnLikeItem(ctx context.Context, userId, itemId int
 	if err := biz.store.Delete(ctx, userId, itemId); err != nil {
 		return model.ErrCannotUnlikeItem(err)
 	}
+
+	go func() {
+		defer common.Recovery()
+
+		if err := biz.itemStore.DecreaseLikeCount(ctx, itemId); err != nil {
+			log.Println("Failed to decrease like count of item", err)
+		}
+	}()
 
 	return nil
 }
