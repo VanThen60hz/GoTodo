@@ -3,6 +3,7 @@ package biz
 import (
 	"GoTodo/common"
 	"GoTodo/modules/userlikeitem/model"
+	"GoTodo/pubsub"
 	"context"
 	"log"
 )
@@ -12,17 +13,26 @@ type UserUnLikeItemStore interface {
 	Delete(ctx context.Context, userId, itemId int) error
 }
 
-type DecrementLikeCountStore interface {
-	DecreaseLikeCount(ctx context.Context, id int) error
-}
+//type DecrementLikeCountStore interface {
+//	DecreaseLikeCount(ctx context.Context, id int) error
+//}
 
 type userUnLikeItemBiz struct {
-	store     UserUnLikeItemStore
-	itemStore DecrementLikeCountStore
+	store UserUnLikeItemStore
+	//itemStore DecrementLikeCountStore
+	ps pubsub.PubSub
 }
 
-func NewUserUnLikeItemBiz(store UserUnLikeItemStore, itemStore DecrementLikeCountStore) *userUnLikeItemBiz {
-	return &userUnLikeItemBiz{store: store, itemStore: itemStore}
+func NewUserUnLikeItemBiz(
+	store UserUnLikeItemStore,
+	//itemStore DecrementLikeCountStore,
+	ps pubsub.PubSub,
+) *userUnLikeItemBiz {
+	return &userUnLikeItemBiz{
+		store: store,
+		//itemStore: itemStore,
+		ps: ps,
+	}
 }
 
 func (biz *userUnLikeItemBiz) UnLikeItem(ctx context.Context, userId, itemId int) error {
@@ -40,13 +50,21 @@ func (biz *userUnLikeItemBiz) UnLikeItem(ctx context.Context, userId, itemId int
 		return model.ErrCannotUnlikeItem(err)
 	}
 
-	go func() {
-		defer common.Recovery()
+	if err := biz.ps.Publish(ctx, common.TopicUserUnlikeItem, pubsub.NewMessage(&model.Like{UserId: userId, ItemId: itemId})); err != nil {
+		log.Println(err)
+	}
 
-		if err := biz.itemStore.DecreaseLikeCount(ctx, itemId); err != nil {
-			log.Println("Failed to decrease like count of item", err)
-		}
-	}()
+	//job := asyncjob.NewJob(func(ctx context.Context) error {
+	//	if err := biz.itemStore.DecreaseLikeCount(ctx, itemId); err != nil {
+	//		return err
+	//	}
+	//
+	//	return nil
+	//})
+	//
+	//if err := asyncjob.NewGroup(true, job).Run(ctx); err != nil {
+	//	log.Println(err)
+	//}
 
 	return nil
 }

@@ -12,6 +12,8 @@ import (
 	ginuserlikeitem "GoTodo/modules/userlikeitem/transport/gin"
 	"GoTodo/plugin/simple"
 	"GoTodo/plugin/tokenprovider/jwt"
+	"GoTodo/pubsub"
+	"GoTodo/subscribers"
 	"fmt"
 	goservice "github.com/200Lab-Education/go-sdk"
 	"github.com/200Lab-Education/go-sdk/plugin/storage/sdkgorm"
@@ -29,6 +31,7 @@ func newService() goservice.Service {
 		goservice.WithVersion("1.0.0"),
 		goservice.WithInitRunnable(sdkgorm.NewGormDB("main", common.PluginDBMain)),
 		goservice.WithInitRunnable(jwtplugin.NewJWTPlugin("jwt")),
+		goservice.WithInitRunnable(pubsub.NewPubSub(common.PluginPubSub)),
 		goservice.WithInitRunnable(simple.NewSimplePlugin("simple")),
 	)
 
@@ -113,6 +116,9 @@ var rootCmd = &cobra.Command{
 				})
 			})
 		})
+
+		//subscribers.IncreaseLikeCountAfterUserLikeItem(service, context.Background())
+		subscribers.NewEngine(service).Start()
 
 		if err := service.Start(); err != nil {
 			serviceLogger.Fatalln(err)

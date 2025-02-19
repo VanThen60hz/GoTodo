@@ -2,10 +2,10 @@ package ginuserlikeitem
 
 import (
 	"GoTodo/common"
-	itemStorage "GoTodo/modules/item/storage"
 	"GoTodo/modules/userlikeitem/biz"
 	"GoTodo/modules/userlikeitem/model"
 	"GoTodo/modules/userlikeitem/storage"
+	"GoTodo/pubsub"
 	goservice "github.com/200Lab-Education/go-sdk"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -22,10 +22,11 @@ func LikeItem(serviceCtx goservice.ServiceContext) gin.HandlerFunc {
 
 		requester := c.MustGet(common.CurrentUser).(common.Requester)
 		db := serviceCtx.MustGet(common.PluginDBMain).(*gorm.DB)
+		ps := serviceCtx.MustGet(common.PluginPubSub).(pubsub.PubSub)
 
 		store := storage.NewSQLStore(db)
-		itemStore := itemStorage.NewSqlStore(db)
-		business := biz.NewUserLikeItemBiz(store, itemStore)
+		//itemStore := itemStorage.NewSqlStore(db)
+		business := biz.NewUserLikeItemBiz(store, ps)
 		now := time.Now().UTC()
 
 		if err := business.LikeItem(c.Request.Context(), &model.Like{

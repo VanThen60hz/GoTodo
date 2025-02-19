@@ -4,6 +4,10 @@ import "log"
 
 const (
 	PluginDBMain = "mysql"
+	PluginPubSub = "pubsub"
+
+	TopicUserLikeItem   = "TopicUserLikeItem"
+	TopicUserUnlikeItem = "TopicUserUnlikeItem"
 )
 
 type DbType int
