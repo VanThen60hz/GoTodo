@@ -3,8 +3,9 @@ package common
 import "log"
 
 const (
-	PluginDBMain = "mysql"
-	PluginPubSub = "pubsub"
+	PluginDBMain  = "mysql"
+	PluginPubSub  = "pubsub"
+	PluginAPIItem = "item-api"
 
 	TopicUserLikeItem   = "TopicUserLikeItem"
 	TopicUserUnlikeItem = "TopicUserUnlikeItem"
